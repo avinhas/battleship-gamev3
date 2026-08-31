@@ -766,12 +766,18 @@ h2 {
     padding: 1.2vh 18px;
   }
 
-  /* The stacked layout pushes Ready below the fold; stick it to the bottom of the
-     viewport while the fleet panel is on screen. */
+  /* The stacked layout pushes Ready far below the fold, so pin it to the viewport
+     and reserve a strip at the end of the column for it to sit over. */
   #btn-ready {
-    position: sticky;
-    bottom: 0;
-    box-shadow: 0 0 0 6px var(--panel);
+    position: fixed;
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: calc(env(safe-area-inset-bottom) + 8px);
+    z-index: 2;
+  }
+
+  #screen-placement {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 64px);
   }
 
   .screen-header {
@@ -816,6 +822,7 @@ h2 {
 /* A landscape phone is wide enough for the desktop layout but far too short for
    height-derived cells, so the last board row used to fall outside the screen. */
 @media (orientation: landscape) and (max-height: 520px) {
+  #screen-setup,
   #screen-placement,
   #screen-battle {
     gap: 6px;
@@ -835,6 +842,18 @@ h2 {
 
   #player-board {
     --cell: clamp(10px, min(calc((100dvh - 190px) / 11), 2.4vw), 22px);
+  }
+
+  /* A centred flex item cannot be scrolled back into view once it overflows, and
+     the capped card let its footer land on top of the fleet controls. */
+  #screen-setup {
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .setup-card {
+    max-height: none;
+    margin: auto;
   }
 
   .screen-header {
@@ -857,5 +876,9 @@ h2 {
   #screen-placement,
   #screen-battle {
     padding: 0 max(4px, env(safe-area-inset-left)) calc(1.2vh + env(safe-area-inset-bottom));
+  }
+
+  #screen-placement {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 64px);
   }
 }

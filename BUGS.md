@@ -176,3 +176,18 @@ browser, plus headless model simulations, and the fix that shipped for it.
   `touch-action: manipulation`; the screen header sticks to the top and `Ready` to the bottom of the
   scrolling column; a landscape phone query derives the cell size from `100dvh`. Typography lost its
   unclamped `vh` sizes so short viewports stay readable.
+
+## 14. The sticky Ready button covered Back, and landscape setup overlapped its own footer
+
+- **Symptom:** On a phone the pinned `Ready` button sat on top of `Back` on the placement screen —
+  `elementFromPoint()` at the centre of `Back` returned `btn-ready`, so `Back` could not be tapped
+  until the column was scrolled. On a landscape phone the setup card's `Start Game` footer landed on
+  top of `Randomize Fleet`/`Standard Fleet` and nothing could be scrolled into view.
+- **Root cause:** A `position: sticky` element is lifted out of its flow position and over whatever
+  precedes it, and the column reserved no room for it. `#screen-setup` centres its card with flex and
+  caps it at `96vh`; once the card overflows a 390px-tall viewport the overflowing part of a centred
+  flex item is unreachable, and the card's own footer overlapped the panel above it.
+- **Fix:** On phones `#btn-ready` is `position: fixed` across the bottom of the viewport and
+  `#screen-placement` reserves a 64px strip plus the safe-area inset for it. In landscape
+  `#screen-setup` scrolls, starts its content at the top-left (`margin: auto` still centres it when
+  it fits) and `.setup-card` drops its `max-height`.
