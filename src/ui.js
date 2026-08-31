@@ -58,11 +58,7 @@ function focusableInModal(modal) {
   return Array.from(box.querySelectorAll(FOCUSABLE_SELECTOR));
 }
 
-function openModal(id) {
-  const modal = el(id);
-  if (!modal.hidden) return;
-  modalOpener.set(id, document.activeElement);
-  modal.hidden = false;
+function focusModal(modal) {
   const targets = focusableInModal(modal);
   if (targets.length > 0) {
     targets[0].focus();
@@ -71,6 +67,19 @@ function openModal(id) {
   const heading = modal.querySelector('.modal-box h2') || modal.querySelector('.modal-box');
   heading.tabIndex = -1;
   heading.focus();
+}
+
+function openModal(id) {
+  const modal = el(id);
+  if (!modal.hidden) return;
+  modalOpener.set(id, document.activeElement);
+  modal.hidden = false;
+  focusModal(modal);
+  // A modal opened during a click or a re-render can lose the focus again once the
+  // browser settles the event, so re-assert it on the next frame.
+  window.requestAnimationFrame(() => {
+    if (!modal.hidden && !modal.contains(document.activeElement)) focusModal(modal);
+  });
 }
 
 function restoreFocus(id) {
