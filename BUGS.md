@@ -68,4 +68,57 @@ browser, plus headless model simulations, and the fix that shipped for it.
 - Severity: High — this is a standard phone width, not an edge case, and it hides your own board state and the move feed entirely during play
 - Root cause: matches Devin's earlier analysis — battle/placement layouts use non-shrinking max-content grid tracks with no fallback, so any viewport narrower than the combined content width gets clipped instead of compressed
 - Fix: the fallback already scoped earlier (overflow:auto safety net + minmax(0, max-content) tracks), explicitly re-verified at mobile widths, not just short desktop windows
-- Status: Open
+- Status: Fixed — see entry 6.
+
+## 6. Boards and side panels were clipped on mobile-portrait viewports
+
+- **Symptom:** At ~390px (iPhone / Chrome) the Placement screen cut off board columns 1 and 9–10,
+  and the Battle screen showed only the enemy board — the player board and the Live Feed were
+  sliced off at both edges.
+- **Root cause:** `styles.css` had no media queries. The side panels kept fixed pixel floors
+  (`minmax(240px, 22vw)` for the placement tray, `minmax(220px, 20vw)` for the feed), the boards
+  kept an 18px cell floor, and both `html, body` and `.placement-body`/`.battle-body` clip with
+  `overflow: hidden`, so anything wider than the viewport was cut instead of wrapped.
+- **Fix:** Board grid tracks became `minmax(0, max-content)` so they compress on any narrow
+  window, and a `@media (max-width: 640px)` breakpoint stacks both screens in one column (battle
+  order: enemy board, player board, feed), drops the pixel floors on the side panels, and pins
+  the cells at 32px for the placement/enemy boards and 14px for the reference player board.
+  The battle screen scrolls vertically at this breakpoint — a deliberate mobile-only exception to
+  the no-scroll rule, since the stacked content is taller than a phone viewport. Desktop layout is
+  untouched.
+
+## 7. A throwing AI turn soft-locked the game
+
+- **Symptom:** If the AI turn ever failed, the board stopped accepting shots entirely and only a
+  page reload recovered the game.
+- **Root cause:** `handlePlayerShot()` set `state.busy = true` before scheduling `handleEnemyTurn`,
+  and `handleEnemyTurn()` cleared the flag only on its normal exit path with no error handling, so
+  a throw left `busy` stuck at `true` and every later click returned early.
+- **Fix:** `handleEnemyTurn()` now clears `state.busy` in a `finally` block whenever the turn ends
+  without a game over, so an unexpected error can no longer wedge the turn loop. The flag still
+  stays set during the AI's "aiming" delay.
+
+## 8. Placement previews never appeared on touch devices
+
+- **Symptom:** On a phone, selecting a ship and tapping the board placed it immediately with no
+  green/red footprint feedback — players placed ships blind and had to pick them up to retry.
+- **Root cause:** The placement preview was wired only to `mouseover`/`mouseleave`, events touch
+  devices do not fire; the `click` handler alone ran on the first tap.
+- **Fix:** A non-passive `touchstart` handler drives a two-step interaction: the first tap on a
+  cell previews the footprint (valid/invalid) and the second tap on the same cell commits it.
+  The handler calls `preventDefault()` so the synthesised mouse events cannot place blind, and the
+  Rotate button and `R` key still re-render the pending preview. The desktop hover→click flow is
+  unchanged.
+
+## 9. No automated coverage of the pure game model
+
+- **Symptom:** Every rule regression — placement validation, sink/win detection, AI shot legality —
+  could only be caught by playing the game by hand, so the invariants recorded above were verified
+  once and never again.
+- **Root cause:** `board.js`, `game.js` and `ai.js` are DOM-free and trivially testable, but the
+  repository had no test runner and no test files at all.
+- **Fix:** Added a dependency-free `package.json` (`npm test` → `node --test`) and `test/` suites
+  covering placement validity and repositioning, hit/sunk/win resolution and duplicate shots, and
+  AI legality across simulated games at every difficulty (never out of bounds, never a repeat,
+  adjacency after a hit, hunt mode restored after a sink, easy never targeting). The test tooling
+  is dev-only: the site still deploys as plain static files with no build step.

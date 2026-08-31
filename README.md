@@ -20,7 +20,9 @@ Three screens on one page, toggled without navigation:
    the right. Every player shot is answered by the AI. `Move History` opens the full chronological
    log; game over offers a review of the final boards and `Play Again`.
 
-Everything fits inside the viewport — the page never scrolls; only the feed and modals do.
+Everything fits inside the viewport — the page never scrolls; only the feed and modals do. Below
+640px the screens stack into a single column (battle order: enemy board, your board, feed) and the
+battle screen scrolls vertically, the one deliberate exception to the no-scroll rule.
 
 ### Difficulty
 
@@ -34,7 +36,8 @@ Measured over 200 simulated games each: Easy clears a fleet in ~94 shots, Medium
 
 ### Controls
 
-- **Click** a tray ship, then **click** a cell to place it.
+- **Click** a tray ship, then **click** a cell to place it. On touch screens the first tap on a
+  cell previews the footprint and a second tap on the same cell places the ship.
 - **R** or the `Rotate` button toggles horizontal/vertical.
 - **Click** a placed ship to pick it back up.
 - **Click** an enemy cell to fire.
@@ -49,6 +52,15 @@ git clone https://github.com/avinhas/battleship-gamev3.git
 cd battleship-gamev3
 python3 -m http.server 8000
 # then open http://localhost:8000/index.html
+```
+
+## Tests
+
+The rules modules are DOM-free, so they run under Node's built-in test runner. There are no
+dependencies to install and the site itself still has no build step — the tooling is dev-only.
+
+```bash
+npm test
 ```
 
 ## Layout of the source
