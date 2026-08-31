@@ -1,0 +1,10 @@
+{
+  "name": "battleship-gamev3",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static Battleship game — dev-only test tooling, the site itself has no build step and no runtime dependencies.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\""
+  }
+}
