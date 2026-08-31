@@ -85,7 +85,9 @@ browser, plus headless model simulations, and the fix that shipped for it.
   the cells at 32px for the placement/enemy boards and 14px for the reference player board.
   The battle screen scrolls vertically at this breakpoint — a deliberate mobile-only exception to
   the no-scroll rule, since the stacked content is taller than a phone viewport. Desktop layout is
-  untouched.
+  untouched. Browser verification at 360px then showed the 32px cell still overflowing by 6px
+  (11 × 32 + 20 gaps = 372px), so a second breakpoint below 380px drops the cell to 29px and the
+  screen padding to 4px — 347px total, inside a 360px viewport.
 
 ## 7. A throwing AI turn soft-locked the game
 
