@@ -18,6 +18,7 @@ import {
   validateComposition,
 } from './board.js';
 import { createGame, enemyShot, playerShot, scoreboard } from './game.js';
+import * as sound from './sound.js';
 
 const MAX_PER_TYPE = 4;
 
@@ -46,19 +47,95 @@ function showScreen(id) {
   });
 }
 
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+// Element that had focus when each modal was opened, so it can be restored on close.
+const modalOpener = new Map();
+
+function focusableInModal(modal) {
+  const box = modal.querySelector('.modal-box');
+  return Array.from(box.querySelectorAll(FOCUSABLE_SELECTOR));
+}
+
+function focusModal(modal) {
+  const targets = focusableInModal(modal);
+  if (targets.length > 0) {
+    targets[0].focus();
+    return;
+  }
+  const heading = modal.querySelector('.modal-box h2') || modal.querySelector('.modal-box');
+  heading.tabIndex = -1;
+  heading.focus();
+}
+
 function openModal(id) {
-  el(id).hidden = false;
+  const modal = el(id);
+  if (!modal.hidden) return;
+  modalOpener.set(id, document.activeElement);
+  modal.hidden = false;
+  focusModal(modal);
+  // A modal opened during a click or a re-render can lose the focus again once the
+  // browser settles the event, so re-assert it on the next frame.
+  window.requestAnimationFrame(() => {
+    if (!modal.hidden && !modal.contains(document.activeElement)) focusModal(modal);
+  });
+}
+
+function restoreFocus(id) {
+  const opener = modalOpener.get(id);
+  modalOpener.delete(id);
+  if (opener && document.contains(opener) && typeof opener.focus === 'function') opener.focus();
 }
 
 function closeModal(id) {
+  if (el(id).hidden) return;
   el(id).hidden = true;
-  if (id === 'modal-history' && state.game && state.game.over) openModal('modal-gameover');
+  if (id === 'modal-history' && state.game && state.game.over) {
+    modalOpener.delete(id);
+    openModal('modal-gameover');
+    return;
+  }
+  restoreFocus(id);
 }
 
 function closeAllModals() {
   document.querySelectorAll('.modal').forEach((modal) => {
+    if (modal.hidden) return;
     modal.hidden = true;
+    restoreFocus(modal.id);
   });
+}
+
+function openTopModal() {
+  const open = Array.from(document.querySelectorAll('.modal')).filter((modal) => !modal.hidden);
+  return open.length > 0 ? open[open.length - 1] : null;
+}
+
+// Keeps Tab and Shift+Tab cycling inside the dialog while a modal is open.
+function trapTab(event) {
+  const modal = openTopModal();
+  if (!modal) return;
+  const targets = focusableInModal(modal);
+  if (targets.length === 0) {
+    event.preventDefault();
+    return;
+  }
+  const first = targets[0];
+  const last = targets[targets.length - 1];
+  const active = document.activeElement;
+  if (!modal.contains(active)) {
+    event.preventDefault();
+    first.focus();
+    return;
+  }
+  if (event.shiftKey && active === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault();
+    first.focus();
+  }
 }
 
 function renderFleetEditor() {
@@ -123,9 +200,8 @@ function startGame() {
 
 /* ---------- Board rendering ---------- */
 
-function renderBoard(container, board, { showShips = false, interactive = false } = {}) {
+function buildGrid(container) {
   container.innerHTML = '';
-  container.classList.toggle('interactive', interactive);
 
   const corner = document.createElement('span');
   corner.className = 'label';
@@ -150,18 +226,30 @@ function renderBoard(container, board, { showShips = false, interactive = false 
       cell.dataset.row = String(row);
       cell.dataset.col = String(col);
       cell.setAttribute('aria-label', cellName(row, col));
+      container.appendChild(cell);
+    }
+  }
+}
 
+// The grid is created once; later renders only patch the cells whose state changed, so
+// the DOM does not churn and keyboard focus survives a shot.
+function renderBoard(container, board, { showShips = false, interactive = false } = {}) {
+  const expected = (BOARD_SIZE + 1) * (BOARD_SIZE + 1);
+  if (container.childElementCount !== expected) buildGrid(container);
+  container.classList.toggle('interactive', interactive);
+
+  for (let row = 0; row < BOARD_SIZE; row += 1) {
+    for (let col = 0; col < BOARD_SIZE; col += 1) {
+      const cell = boardCell(container, row, col);
       const ship = shipAt(board, row, col);
       const shot = board.shots[row][col];
-      if (showShips && ship) cell.classList.add('ship');
-      if (shot === 'miss') {
-        cell.classList.add('miss', 'fired');
-        cell.textContent = '•';
-      } else if (shot === 'hit') {
-        cell.classList.add(ship && ship.sunk ? 'sunk' : 'hit', 'fired');
-        cell.textContent = '✕';
-      }
-      container.appendChild(cell);
+      const text = shot === 'miss' ? '•' : shot === 'hit' ? '✕' : '';
+      cell.classList.toggle('ship', Boolean(showShips && ship));
+      cell.classList.toggle('miss', shot === 'miss');
+      cell.classList.toggle('hit', shot === 'hit' && !(ship && ship.sunk));
+      cell.classList.toggle('sunk', shot === 'hit' && Boolean(ship && ship.sunk));
+      cell.classList.toggle('fired', shot !== null);
+      if (cell.textContent !== text) cell.textContent = text;
     }
   }
 }
@@ -207,6 +295,7 @@ function renderPlacement() {
     showShips: true,
     interactive: true,
   });
+  clearPreview();
   renderTray();
   el('orientation-label').textContent =
     state.orientation === 'horizontal' ? 'Horizontal' : 'Vertical';
@@ -348,6 +437,15 @@ function setStatus(text) {
   el('battle-status').textContent = text;
 }
 
+function renderMuteButton() {
+  const button = el('btn-mute');
+  const muted = sound.isMuted();
+  button.textContent = muted ? '🔇' : '🔊';
+  button.setAttribute('aria-pressed', String(muted));
+  button.setAttribute('aria-label', muted ? 'Unmute sound' : 'Mute sound');
+  button.title = muted ? 'Unmute sound' : 'Mute sound';
+}
+
 function renderBattle() {
   const { game } = state;
   renderBoard(el('player-board'), game.playerBoard, { showShips: true });
@@ -360,11 +458,40 @@ function renderBattle() {
   el('score-enemy').textContent = `${score.enemyRemaining}/${score.enemyTotal}`;
 }
 
+const RESULT_ICONS = { miss: '◦', hit: '✕', sunk: '☠' };
+
+function feedSpan(className, text) {
+  const span = document.createElement('span');
+  span.className = className;
+  span.textContent = text;
+  return span;
+}
+
+function feedDetail(entry) {
+  if (entry.result === 'sunk') {
+    const owner = entry.actor === 'player' ? 'the enemy' : 'your';
+    return `sank ${owner} ${entry.shipName}!`;
+  }
+  return entry.result === 'hit' ? 'Hit' : 'Miss';
+}
+
 function appendFeed(entry) {
   const feed = el('live-feed');
   const node = document.createElement('div');
-  node.className = `feed-entry ${entry.actor} result-${entry.result}`;
-  node.textContent = entry.text;
+  node.className = `feed-entry ${entry.actor} result-${entry.result} feed-enter`;
+  node.addEventListener('animationend', () => node.classList.remove('feed-enter'), {
+    once: true,
+  });
+
+  const icon = feedSpan('feed-icon', RESULT_ICONS[entry.result] || '•');
+  icon.setAttribute('aria-hidden', 'true');
+  node.append(
+    feedSpan('feed-actor', entry.actor === 'player' ? 'You' : 'Enemy'),
+    icon,
+    feedSpan('feed-cell', entry.cell),
+    feedSpan('feed-detail', feedDetail(entry)),
+  );
+
   feed.appendChild(node);
   feed.scrollTop = feed.scrollHeight;
 }
@@ -397,6 +524,7 @@ function finishGame() {
     : 'The enemy sank your entire fleet. Defeat.';
   el('gameover-title').textContent = won ? 'Victory' : 'Defeat';
   setStatus(won ? 'You win!' : 'You lose.');
+  sound.play(won ? 'win' : 'lose');
   renderBattle();
   openModal('modal-gameover');
 }
@@ -408,6 +536,7 @@ function handleEnemyTurn() {
     if (outcome.entry) {
       appendFeed(outcome.entry);
       setStatus(outcome.entry.text);
+      sound.play(outcome.result);
     }
     renderBattle();
     over = state.game.over;
@@ -432,6 +561,7 @@ function handlePlayerShot(row, col) {
   state.busy = true;
   appendFeed(outcome.entry);
   setStatus(outcome.entry.text);
+  sound.play(outcome.result);
   renderBattle();
   if (game.over) {
     finishGame();
@@ -454,6 +584,10 @@ function bindBattleScreen() {
     const cell = event.target.closest('.cell');
     if (!cell) return;
     handlePlayerShot(Number(cell.dataset.row), Number(cell.dataset.col));
+  });
+  el('btn-mute').addEventListener('click', () => {
+    sound.setMuted(!sound.isMuted());
+    renderMuteButton();
   });
   el('btn-history').addEventListener('click', showHistory);
   el('btn-gameover-history').addEventListener('click', () => {
@@ -535,7 +669,11 @@ function bindSetupScreen() {
     renderFleetEditor();
   });
   el('btn-how-to-play').addEventListener('click', () => openModal('modal-how-to-play'));
-  el('btn-start').addEventListener('click', startGame);
+  el('btn-start').addEventListener('click', () => {
+    // The first click of a match doubles as the gesture that arms audio playback.
+    sound.unlock();
+    startGame();
+  });
 }
 
 function bindGlobalControls() {
@@ -545,6 +683,7 @@ function bindGlobalControls() {
     }
   });
   document.addEventListener('keydown', (event) => {
+    if (event.key === 'Tab') trapTab(event);
     if (event.key === 'Escape') {
       const historyWasOpen = !el('modal-history').hidden;
       closeAllModals();
@@ -564,6 +703,7 @@ function init() {
   bindPlacementScreen();
   bindBattleScreen();
   bindGlobalControls();
+  renderMuteButton();
   renderFleetEditor();
   showScreen('screen-setup');
 }

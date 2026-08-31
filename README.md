@@ -20,6 +20,16 @@ Three screens on one page, toggled without navigation:
    the right. Every player shot is answered by the AI. `Move History` opens the full chronological
    log; game over offers a review of the final boards and `Play Again`.
 
+The live feed renders each shot as a card — actor badge, result icon, the target cell in a
+monospace chip and the outcome — colour-coded per result with sunk ships called out, animated on
+arrival and announced through `role="log"`/`aria-live="polite"`. Retro Web Audio beeps play on
+miss, hit and sunk plus a fanfare on win/lose; the speaker button in the battle header mutes them
+and the preference is remembered in `localStorage`.
+
+Modals move focus into the dialog, trap `Tab`/`Shift+Tab` inside it and restore focus to whatever
+opened them. The boards are built once and patched cell by cell, so a shot never rebuilds the grid
+or steals focus.
+
 Everything fits inside the viewport — the page never scrolls; only the feed and modals do. Below
 640px the screens stack into a single column (battle order: enemy board, your board, feed) and the
 battle screen scrolls vertically, the one deliberate exception to the no-scroll rule.
@@ -29,10 +39,12 @@ battle screen scrolls vertically, the one deliberate exception to the no-scroll 
 | Level  | Behaviour                                                                |
 | ------ | ------------------------------------------------------------------------ |
 | Easy   | Uniformly random unshot cells                                            |
-| Medium | Hunt/target — random until a hit, then works adjacent cells and extends along the discovered axis |
+| Medium | Hunt/target — random until a hit, then works adjacent cells and extends along the axis of that hit cluster |
 | Hard   | Hunt/target plus parity hunting and a probability-density map of every legal placement of the ships still afloat |
 
-Measured over 200 simulated games each: Easy clears a fleet in ~94 shots, Medium ~67, Hard ~47.
+Open hits are grouped into contiguous clusters so two adjacent unsunk ships never share an inferred
+orientation. Measured over 200 simulated games each: Easy clears a fleet in ~94 shots, Medium ~64,
+Hard ~46.
 
 ### Controls
 
@@ -41,7 +53,8 @@ Measured over 200 simulated games each: Easy clears a fleet in ~94 shots, Medium
 - **R** or the `Rotate` button toggles horizontal/vertical.
 - **Click** a placed ship to pick it back up.
 - **Click** an enemy cell to fire.
-- **Esc** closes any modal.
+- **Esc** closes any modal; `Tab` stays inside an open modal.
+- The **speaker** button in the battle header mutes and unmutes the sound effects.
 
 ## Running locally
 
@@ -72,6 +85,7 @@ npm test
 | `src/board.js`              | Grid, ships, placement validation, random placement, shot resolution |
 | `src/game.js`               | Match state, turn flow, move log, win detection                    |
 | `src/ai.js`                 | Difficulty-scaled opponent                                         |
+| `src/sound.js`              | Web Audio beeps: event→note table, mute state, no DOM              |
 | `src/ui.js`                 | Rendering and event wiring — the only module that touches the DOM  |
 
 `board.js`, `game.js` and `ai.js` contain no DOM access, so the rules can be simulated headlessly.

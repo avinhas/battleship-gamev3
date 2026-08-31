@@ -62,31 +62,54 @@ export function createAI(difficulty = 'medium', random = Math.random) {
   let activeHits = [];
   let queue = [];
 
-  function queueNeighbours(board) {
-    const candidates = [];
-    const seen = new Set();
-    const rows = new Set(activeHits.map((hit) => hit.row));
-    const cols = new Set(activeHits.map((hit) => hit.col));
-    const alignedRow = activeHits.length > 1 && rows.size === 1;
-    const alignedCol = activeHits.length > 1 && cols.size === 1;
+  // Splits the open hits into orthogonally connected groups so two adjacent unsunk ships
+  // never share an inferred orientation. The most recent hit's group is worked first.
+  function hitClusters() {
+    const pending = activeHits.slice();
+    const groups = [];
+    while (pending.length > 0) {
+      const group = [pending.pop()];
+      for (let grown = true; grown; ) {
+        grown = false;
+        for (let i = pending.length - 1; i >= 0; i -= 1) {
+          const hit = pending[i];
+          const touches = group.some(
+            (member) => Math.abs(member.row - hit.row) + Math.abs(member.col - hit.col) === 1,
+          );
+          if (!touches) continue;
+          group.push(hit);
+          pending.splice(i, 1);
+          grown = true;
+        }
+      }
+      groups.push(group);
+    }
+    return groups;
+  }
 
-    for (const hit of activeHits) {
-      const deltas = alignedRow
+  function clusterCandidates(cluster, board, seen, candidates) {
+    const rows = new Set(cluster.map((hit) => hit.row));
+    const cols = new Set(cluster.map((hit) => hit.col));
+    const alignedRow = cluster.length > 1 && rows.size === 1;
+    const alignedCol = cluster.length > 1 && cols.size === 1;
+    const deltas = alignedRow
+      ? [
+          [0, -1],
+          [0, 1],
+        ]
+      : alignedCol
         ? [
+            [-1, 0],
+            [1, 0],
+          ]
+        : [
+            [-1, 0],
+            [1, 0],
             [0, -1],
             [0, 1],
-          ]
-        : alignedCol
-          ? [
-              [-1, 0],
-              [1, 0],
-            ]
-          : [
-              [-1, 0],
-              [1, 0],
-              [0, -1],
-              [0, 1],
-            ];
+          ];
+
+    for (const hit of cluster) {
       for (const [dr, dc] of deltas) {
         const row = hit.row + dr;
         const col = hit.col + dc;
@@ -98,6 +121,12 @@ export function createAI(difficulty = 'medium', random = Math.random) {
         candidates.push({ row, col });
       }
     }
+  }
+
+  function queueNeighbours(board) {
+    const candidates = [];
+    const seen = new Set();
+    for (const cluster of hitClusters()) clusterCandidates(cluster, board, seen, candidates);
     queue = candidates;
   }
 

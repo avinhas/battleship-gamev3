@@ -94,6 +94,8 @@
             <span>Difficulty: <strong id="score-difficulty">Medium</strong></span>
           </div>
           <span class="header-actions">
+            <button type="button" class="btn btn-icon" id="btn-mute" aria-pressed="false"
+              aria-label="Mute sound">🔊</button>
             <button type="button" class="btn" id="btn-history">Move History</button>
             <button type="button" class="btn" id="btn-new-game">New Game</button>
           </span>
@@ -110,7 +112,7 @@
           </div>
           <div class="panel feed-panel">
             <h2>Live feed</h2>
-            <div class="feed" id="live-feed"></div>
+            <div class="feed" id="live-feed" role="log" aria-live="polite"></div>
           </div>
         </div>
       </section>
