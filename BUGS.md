@@ -61,3 +61,11 @@ browser, plus headless model simulations, and the fix that shipped for it.
   without consuming a turn, the winner was announced only when the last ship sank, and the live
   feed and Move History modal contained identical entries (110 and 114 entries in the recorded
   runs).
+## Board/panel layout clips on mobile viewports
+- What I did: opened the live GitHub Pages link on an iPhone (Safari), went through placement into Battle
+- What I expected: all boards/panels fully visible within the no-scroll layout
+- What happened instead: on Placement, "Your Waters" is clipped — columns 1 and 9–10 are outside the viewport. On Battle, "Your Waters" and the Live Feed are both clipped to slivers at opposite edges; only Enemy Waters renders fully
+- Severity: High — this is a standard phone width, not an edge case, and it hides your own board state and the move feed entirely during play
+- Root cause: matches Devin's earlier analysis — battle/placement layouts use non-shrinking max-content grid tracks with no fallback, so any viewport narrower than the combined content width gets clipped instead of compressed
+- Fix: the fallback already scoped earlier (overflow:auto safety net + minmax(0, max-content) tracks), explicitly re-verified at mobile widths, not just short desktop windows
+- Status: Open
