@@ -17,6 +17,7 @@ import {
   shipCells,
   validateComposition,
 } from './board.js';
+import { createGame, enemyShot, playerShot, scoreboard } from './game.js';
 
 const MAX_PER_TYPE = 4;
 
@@ -27,7 +28,12 @@ const state = {
   playerBoard: createBoard(),
   selectedShipId: null,
   orientation: 'horizontal',
+  game: null,
+  busy: false,
 };
+
+const AI_DELAY_MS = 550;
+const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 
 const el = (id) => document.getElementById(id);
 
@@ -304,7 +310,125 @@ function clearBoard() {
 /* ---------- Screen 3: battle ---------- */
 
 function startBattle() {
+  state.game = createGame({
+    composition: state.composition,
+    difficulty: state.difficulty,
+    playerBoard: state.playerBoard,
+  });
+  state.busy = false;
+  el('live-feed').innerHTML = '';
+  el('score-difficulty').textContent = DIFFICULTY_LABELS[state.difficulty];
+  setStatus('Your turn — click a cell on the enemy board to fire.');
+  renderBattle();
   showScreen('screen-battle');
+}
+
+function setStatus(text) {
+  el('battle-status').textContent = text;
+}
+
+function renderBattle() {
+  const { game } = state;
+  renderBoard(el('player-board'), game.playerBoard, { showShips: true });
+  renderBoard(el('enemy-board'), game.enemyBoard, {
+    showShips: false,
+    interactive: !game.over,
+  });
+  const score = scoreboard(game);
+  el('score-player').textContent = `${score.playerRemaining}/${score.playerTotal}`;
+  el('score-enemy').textContent = `${score.enemyRemaining}/${score.enemyTotal}`;
+}
+
+function appendFeed(entry) {
+  const feed = el('live-feed');
+  const node = document.createElement('div');
+  node.className = `feed-entry ${entry.actor} result-${entry.result}`;
+  node.textContent = entry.text;
+  feed.appendChild(node);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function renderHistory() {
+  const list = el('history-list');
+  list.innerHTML = '';
+  if (!state.game || state.game.log.length === 0) {
+    const empty = document.createElement('li');
+    empty.textContent = 'No moves yet.';
+    list.appendChild(empty);
+    return;
+  }
+  for (const entry of state.game.log) {
+    const item = document.createElement('li');
+    item.innerHTML = `<span class="turn-number">${entry.index}</span><span>${entry.text}</span>`;
+    list.appendChild(item);
+  }
+}
+
+function finishGame() {
+  const won = state.game.winner === 'player';
+  el('gameover-message').textContent = won
+    ? 'You sank the entire enemy fleet. Victory!'
+    : 'The enemy sank your entire fleet. Defeat.';
+  el('gameover-title').textContent = won ? 'Victory' : 'Defeat';
+  setStatus(won ? 'You win!' : 'You lose.');
+  renderBattle();
+  openModal('modal-gameover');
+}
+
+function handleEnemyTurn() {
+  const outcome = enemyShot(state.game);
+  if (outcome.entry) {
+    appendFeed(outcome.entry);
+    setStatus(outcome.entry.text);
+  }
+  renderBattle();
+  if (state.game.over) {
+    finishGame();
+    return;
+  }
+  state.busy = false;
+  setStatus('Your turn — fire at the enemy board.');
+}
+
+function handlePlayerShot(row, col) {
+  const { game } = state;
+  if (!game || game.over || state.busy) return;
+  const outcome = playerShot(game, row, col);
+  if (outcome.result === 'invalid') {
+    setStatus('You already fired at that cell.');
+    return;
+  }
+  state.busy = true;
+  appendFeed(outcome.entry);
+  setStatus(outcome.entry.text);
+  renderBattle();
+  if (game.over) {
+    finishGame();
+    return;
+  }
+  setStatus(`${outcome.entry.text} Enemy is aiming…`);
+  window.setTimeout(handleEnemyTurn, AI_DELAY_MS);
+}
+
+function playAgain() {
+  closeAllModals();
+  state.game = null;
+  state.playerBoard = createBoard();
+  state.busy = false;
+  showScreen('screen-setup');
+}
+
+function bindBattleScreen() {
+  el('enemy-board').addEventListener('click', (event) => {
+    const cell = event.target.closest('.cell');
+    if (!cell) return;
+    handlePlayerShot(Number(cell.dataset.row), Number(cell.dataset.col));
+  });
+  el('btn-history').addEventListener('click', () => {
+    renderHistory();
+    openModal('modal-history');
+  });
+  el('btn-play-again').addEventListener('click', playAgain);
 }
 
 function bindPlacementScreen() {
@@ -385,6 +509,7 @@ function bindGlobalControls() {
 function init() {
   bindSetupScreen();
   bindPlacementScreen();
+  bindBattleScreen();
   bindGlobalControls();
   renderFleetEditor();
   showScreen('screen-setup');
