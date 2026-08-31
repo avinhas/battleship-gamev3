@@ -654,3 +654,17 @@ h2 {
     padding: 1.2vh 18px;
   }
 }
+
+/* 11 * 32px cells + 20px of gaps overflows a 360px-wide phone, so shrink the cell
+   and the screen padding below 380px. */
+@media (max-width: 380px) {
+  #placement-board,
+  #enemy-board {
+    --cell: 29px;
+  }
+
+  #screen-placement,
+  #screen-battle {
+    padding: 1.2vh 4px;
+  }
+}
