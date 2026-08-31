@@ -92,7 +92,10 @@
             <span>Enemy ships: <strong id="score-enemy">0</strong></span>
             <span>Difficulty: <strong id="score-difficulty">Medium</strong></span>
           </div>
-          <button type="button" class="btn" id="btn-history">Move History</button>
+          <span class="header-actions">
+            <button type="button" class="btn" id="btn-history">Move History</button>
+            <button type="button" class="btn" id="btn-new-game">New Game</button>
+          </span>
         </header>
         <p class="status-line" id="battle-status"></p>
         <div class="battle-body">
@@ -129,15 +132,18 @@
     </div>
 
     <div class="modal" id="modal-gameover" hidden>
-      <div class="modal-backdrop"></div>
+      <div class="modal-backdrop" data-close-modal></div>
       <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="gameover-title">
         <header class="modal-header">
           <h2 id="gameover-title">Game Over</h2>
+          <button type="button" class="btn btn-icon" data-close-modal aria-label="Close">✕</button>
         </header>
         <div class="modal-body">
           <p id="gameover-message"></p>
+          <p class="hint">Close this dialog to review the final boards and the move history.</p>
         </div>
         <footer class="modal-footer">
+          <button type="button" class="btn" id="btn-gameover-history">Move History</button>
           <button type="button" class="btn btn-primary" id="btn-play-again">Play Again</button>
         </footer>
       </div>

@@ -364,6 +364,11 @@ function renderHistory() {
   }
 }
 
+function showHistory() {
+  renderHistory();
+  openModal('modal-history');
+}
+
 function finishGame() {
   const won = state.game.winner === 'player';
   el('gameover-message').textContent = won
@@ -424,10 +429,12 @@ function bindBattleScreen() {
     if (!cell) return;
     handlePlayerShot(Number(cell.dataset.row), Number(cell.dataset.col));
   });
-  el('btn-history').addEventListener('click', () => {
-    renderHistory();
-    openModal('modal-history');
+  el('btn-history').addEventListener('click', showHistory);
+  el('btn-gameover-history').addEventListener('click', () => {
+    closeModal('modal-gameover');
+    showHistory();
   });
+  el('btn-new-game').addEventListener('click', playAgain);
   el('btn-play-again').addEventListener('click', playAgain);
 }
 
