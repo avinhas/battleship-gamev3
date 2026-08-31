@@ -254,7 +254,7 @@ function handlePlacementClick(row, col) {
   const existing = shipAt(state.playerBoard, row, col);
   const ship = selectedFleetShip();
 
-  if (existing && (!ship || placedShip(ship.id) || existing.id === state.selectedShipId)) {
+  if (existing) {
     removeShip(state.playerBoard, existing.id);
     state.orientation = existing.orientation;
     setPlacementMessage(`${existing.name} returned to the tray.`);
