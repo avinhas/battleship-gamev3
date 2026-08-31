@@ -62,11 +62,11 @@ h3 {
 }
 
 h1 {
-  font-size: 3.2vh;
+  font-size: clamp(20px, 3.2vh, 44px);
 }
 
 h2 {
-  font-size: 1.9vh;
+  font-size: clamp(11px, 1.9vh, 20px);
   color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -90,7 +90,14 @@ h2 {
   border-radius: 8px;
   padding: 0.8vh 1vw;
   font: inherit;
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35em;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
@@ -113,7 +120,11 @@ h2 {
 }
 
 .btn-icon {
-  padding: 0.4vh 0.7vw;
+  padding: 0;
+  width: 2.4em;
+  aspect-ratio: 1;
+  flex: none;
+  font-size: 1.1em;
   line-height: 1;
 }
 
@@ -367,6 +378,7 @@ h2 {
 }
 
 .board-title {
+  font-size: max(1em, 11px);
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -421,7 +433,7 @@ h2 {
 }
 
 .message {
-  min-height: 2.2vh;
+  min-height: 1.4em;
   color: var(--warn);
 }
 
@@ -741,6 +753,62 @@ h2 {
 
   .btn-primary {
     padding: 1.2vh 18px;
+  }
+}
+
+/* Touch devices need tap targets that clear the 44px guideline, and buttons that
+   stay the same height whether they hold a label or a single icon. */
+@media (pointer: coarse) {
+  .btn {
+    min-height: 44px;
+    font-size: max(1em, 15px);
+  }
+
+  .btn-icon {
+    width: 44px;
+    min-width: 44px;
+  }
+
+  .header-actions {
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .placement-controls {
+    gap: 8px;
+  }
+
+  .stepper .btn {
+    min-height: 36px;
+  }
+}
+
+/* ---------- Phone landscape ---------- */
+
+/* A landscape phone is wide enough for the desktop layout but far too short for
+   height-derived cells, so the last board row used to fall outside the screen. */
+@media (orientation: landscape) and (max-height: 520px) {
+  #screen-placement,
+  #screen-battle {
+    gap: 6px;
+  }
+
+  #placement-board,
+  #enemy-board {
+    --cell: clamp(14px, min(calc((100dvh - 150px) / 11), 4vw), 34px);
+  }
+
+  #player-board {
+    --cell: clamp(10px, min(calc((100dvh - 190px) / 11), 2.4vw), 22px);
+  }
+
+  .screen-header {
+    align-items: center;
+  }
+
+  .board-wrap {
+    gap: 4px;
   }
 }
 
