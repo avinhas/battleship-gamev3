@@ -30,6 +30,7 @@ const state = {
   orientation: 'horizontal',
   game: null,
   busy: false,
+  hovered: null,
 };
 
 const AI_DELAY_MS = 550;
@@ -285,6 +286,7 @@ function rotateSelection() {
   state.orientation = state.orientation === 'horizontal' ? 'vertical' : 'horizontal';
   el('orientation-label').textContent =
     state.orientation === 'horizontal' ? 'Horizontal' : 'Vertical';
+  if (state.hovered) showPreview(state.hovered.row, state.hovered.col);
 }
 
 function randomizePlacement() {
@@ -450,10 +452,14 @@ function bindPlacementScreen() {
   board.addEventListener('mouseover', (event) => {
     const cell = event.target.closest('.cell');
     if (!cell) return;
-    showPreview(Number(cell.dataset.row), Number(cell.dataset.col));
+    state.hovered = { row: Number(cell.dataset.row), col: Number(cell.dataset.col) };
+    showPreview(state.hovered.row, state.hovered.col);
   });
 
-  board.addEventListener('mouseleave', clearPreview);
+  board.addEventListener('mouseleave', () => {
+    state.hovered = null;
+    clearPreview();
+  });
 
   el('ship-tray').addEventListener('click', (event) => {
     const button = event.target.closest('.tray-ship');
