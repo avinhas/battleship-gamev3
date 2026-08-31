@@ -348,7 +348,7 @@ h2 {
   flex: 1;
   overflow: hidden;
   display: grid;
-  grid-template-columns: minmax(0, auto) minmax(240px, 22vw);
+  grid-template-columns: minmax(0, max-content) minmax(240px, 22vw);
   gap: 1.2vw;
   justify-content: center;
   min-height: 0;
@@ -428,7 +428,7 @@ h2 {
   flex: 1;
   overflow: hidden;
   display: grid;
-  grid-template-columns: max-content max-content minmax(220px, 20vw);
+  grid-template-columns: minmax(0, max-content) minmax(0, max-content) minmax(220px, 20vw);
   gap: 2vw;
   align-items: center;
   justify-content: center;
