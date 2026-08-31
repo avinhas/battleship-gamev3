@@ -187,7 +187,9 @@ browser, plus headless model simulations, and the fix that shipped for it.
   precedes it, and the column reserved no room for it. `#screen-setup` centres its card with flex and
   caps it at `96vh`; once the card overflows a 390px-tall viewport the overflowing part of a centred
   flex item is unreachable, and the card's own footer overlapped the panel above it.
-- **Fix:** On phones `#btn-ready` is `position: fixed` across the bottom of the viewport and
-  `#screen-placement` reserves a 64px strip plus the safe-area inset for it. In landscape
+- **Fix:** `Ready` moved out of the fleet panel into a `.placement-footer` at the end of the
+  placement screen: on phones the screen itself no longer scrolls, `.placement-body` does, so the
+  button stays visible as a footer without ever being lifted over the controls above it (a pinned
+  `fixed`/`sticky` bar covers whatever happens to sit under it at any scroll offset). In landscape
   `#screen-setup` scrolls, starts its content at the top-left (`margin: auto` still centres it when
   it fits) and `.setup-card` drops its `max-height`.

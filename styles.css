@@ -432,6 +432,12 @@ h2 {
   gap: 0.6vw;
 }
 
+.placement-footer {
+  display: flex;
+  justify-content: center;
+  flex: none;
+}
+
 .message {
   min-height: 1.4em;
   color: var(--warn);
@@ -704,9 +710,13 @@ h2 {
   }
 
   .placement-body {
-    flex: none;
+    flex: 1;
     grid-template-columns: minmax(0, 1fr);
-    overflow: visible;
+    /* The stacked rows keep their natural height and the container scrolls; without
+       this the squeezed fleet panel spills over its own rows. */
+    grid-auto-rows: min-content;
+    align-content: start;
+    overflow-y: auto;
     gap: 1.2vh;
   }
 
@@ -766,18 +776,14 @@ h2 {
     padding: 1.2vh 18px;
   }
 
-  /* The stacked layout pushes Ready far below the fold, so pin it to the viewport
-     and reserve a strip at the end of the column for it to sit over. */
-  #btn-ready {
-    position: fixed;
-    left: max(8px, env(safe-area-inset-left));
-    right: max(8px, env(safe-area-inset-right));
-    bottom: calc(env(safe-area-inset-bottom) + 8px);
-    z-index: 2;
+  /* Ready is the screen's footer rather than the tail of the scrolling column, so it
+     stays visible without ever covering the controls above it. */
+  #screen-placement {
+    overflow-y: hidden;
   }
 
-  #screen-placement {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 64px);
+  #btn-ready {
+    width: 100%;
   }
 
   .screen-header {
@@ -876,9 +882,5 @@ h2 {
   #screen-placement,
   #screen-battle {
     padding: 0 max(4px, env(safe-area-inset-left)) calc(1.2vh + env(safe-area-inset-bottom));
-  }
-
-  #screen-placement {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 64px);
   }
 }
