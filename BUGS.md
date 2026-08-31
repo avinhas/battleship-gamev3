@@ -160,3 +160,36 @@ browser, plus headless model simulations, and the fix that shipped for it.
 - **Fix:** Open hits are grouped into orthogonally connected clusters and orientation is inferred
   per cluster, with the cluster containing the most recent hit worked first. Over 200 simulated
   games this cut Medium from ~67 shots to ~64; Hard is unchanged at ~46.
+
+## 13. iOS Safari clipped the bottom of every screen and squashed the header buttons
+
+- **Symptom:** On an iPhone the bottom of the battle screen (the newest live-feed entries) and the
+  `Ready` button sat behind Safari's toolbar, the mute button rendered as a cramped sliver next to
+  its neighbours, taps needed a second attempt, and in landscape the last board row fell outside the
+  screen entirely.
+- **Root cause:** The app was `100vh` tall, which iOS resolves against the toolbar-less viewport;
+  button padding was expressed in `vh`/`vw`, so on a phone `.btn` came out ~31px tall and `.btn-icon`
+  37x31px — under the 44px touch target — and the height-derived cell size (`min(6vh, 4vw)`) had no
+  landscape fallback.
+- **Fix:** `#app` uses `100dvh` (with the `100vh` fallback) and the mobile screens pad by
+  `env(safe-area-inset-*)`; coarse pointers get 44px-minimum buttons with square icon buttons and
+  `touch-action: manipulation`; the screen header sticks to the top and `Ready` to the bottom of the
+  scrolling column; a landscape phone query derives the cell size from `100dvh`. Typography lost its
+  unclamped `vh` sizes so short viewports stay readable.
+
+## 14. The sticky Ready button covered Back, and landscape setup overlapped its own footer
+
+- **Symptom:** On a phone the pinned `Ready` button sat on top of `Back` on the placement screen —
+  `elementFromPoint()` at the centre of `Back` returned `btn-ready`, so `Back` could not be tapped
+  until the column was scrolled. On a landscape phone the setup card's `Start Game` footer landed on
+  top of `Randomize Fleet`/`Standard Fleet` and nothing could be scrolled into view.
+- **Root cause:** A `position: sticky` element is lifted out of its flow position and over whatever
+  precedes it, and the column reserved no room for it. `#screen-setup` centres its card with flex and
+  caps it at `96vh`; once the card overflows a 390px-tall viewport the overflowing part of a centred
+  flex item is unreachable, and the card's own footer overlapped the panel above it.
+- **Fix:** `Ready` moved out of the fleet panel into a `.placement-footer` at the end of the
+  placement screen: on phones the screen itself no longer scrolls, `.placement-body` does, so the
+  button stays visible as a footer without ever being lifted over the controls above it (a pinned
+  `fixed`/`sticky` bar covers whatever happens to sit under it at any scroll offset). In landscape
+  `#screen-setup` scrolls, starts its content at the top-left (`margin: auto` still centres it when
+  it fits) and `.setup-card` drops its `max-height`.

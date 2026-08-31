@@ -32,8 +32,11 @@ body {
 }
 
 #app {
-  width: 100vw;
+  width: 100%;
+  /* iOS Safari resolves 100vh to the toolbar-less viewport, which hides the
+     bottom of the app behind the browser chrome; dvh tracks the visible area. */
   height: 100vh;
+  height: 100dvh;
   display: flex;
   overflow: hidden;
 }
@@ -59,11 +62,11 @@ h3 {
 }
 
 h1 {
-  font-size: 3.2vh;
+  font-size: clamp(20px, 3.2vh, 44px);
 }
 
 h2 {
-  font-size: 1.9vh;
+  font-size: clamp(11px, 1.9vh, 20px);
   color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -87,7 +90,14 @@ h2 {
   border-radius: 8px;
   padding: 0.8vh 1vw;
   font: inherit;
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35em;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
@@ -110,7 +120,11 @@ h2 {
 }
 
 .btn-icon {
-  padding: 0.4vh 0.7vw;
+  padding: 0;
+  width: 2.4em;
+  aspect-ratio: 1;
+  flex: none;
+  font-size: 1.1em;
   line-height: 1;
 }
 
@@ -364,6 +378,7 @@ h2 {
 }
 
 .board-title {
+  font-size: max(1em, 11px);
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -417,8 +432,14 @@ h2 {
   gap: 0.6vw;
 }
 
+.placement-footer {
+  display: flex;
+  justify-content: center;
+  flex: none;
+}
+
 .message {
-  min-height: 2.2vh;
+  min-height: 1.4em;
   color: var(--warn);
 }
 
@@ -669,7 +690,7 @@ h2 {
   #screen-placement,
   #screen-battle {
     overflow-y: auto;
-    padding: 1.2vh 8px;
+    padding: 0 max(8px, env(safe-area-inset-left)) calc(1.2vh + env(safe-area-inset-bottom));
   }
 
   .screen-header {
@@ -677,10 +698,25 @@ h2 {
     row-gap: 0.6vh;
   }
 
-  .placement-body {
-    flex: none;
+  .screen-header h1 {
+    font-size: 22px;
+  }
+
+  /* The two-column setup grid leaves the fleet panel too narrow for a ship name,
+     its length, and a 44px stepper, so stack the panels and let each fleet row
+     use the full width. */
+  .setup-columns {
     grid-template-columns: minmax(0, 1fr);
-    overflow: visible;
+  }
+
+  .placement-body {
+    flex: 1;
+    grid-template-columns: minmax(0, 1fr);
+    /* The stacked rows keep their natural height and the container scrolls; without
+       this the squeezed fleet panel spills over its own rows. */
+    grid-auto-rows: min-content;
+    align-content: start;
+    overflow-y: auto;
     gap: 1.2vh;
   }
 
@@ -739,6 +775,100 @@ h2 {
   .btn-primary {
     padding: 1.2vh 18px;
   }
+
+  /* Ready is the screen's footer rather than the tail of the scrolling column, so it
+     stays visible without ever covering the controls above it. */
+  #screen-placement {
+    overflow-y: hidden;
+  }
+
+  #btn-ready {
+    width: 100%;
+  }
+
+  .screen-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--bg);
+    padding: 1.2vh 0 0.6vh;
+  }
+}
+
+/* Touch devices need tap targets that clear the 44px guideline, and buttons that
+   stay the same height whether they hold a label or a single icon. */
+@media (pointer: coarse) {
+  .btn {
+    min-height: 44px;
+    font-size: max(1em, 15px);
+  }
+
+  .btn-icon {
+    width: 44px;
+    min-width: 44px;
+  }
+
+  .header-actions {
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .placement-controls {
+    gap: 8px;
+  }
+
+  .stepper .btn {
+    min-height: 36px;
+  }
+}
+
+/* ---------- Phone landscape ---------- */
+
+/* A landscape phone is wide enough for the desktop layout but far too short for
+   height-derived cells, so the last board row used to fall outside the screen. */
+@media (orientation: landscape) and (max-height: 520px) {
+  #screen-setup,
+  #screen-placement,
+  #screen-battle {
+    gap: 6px;
+    overflow-y: auto;
+    /* Landscape phones are wider than the 640px portrait breakpoint, so pad by the
+       safe-area insets here too or the notch/home indicator covers the boards. */
+    padding: env(safe-area-inset-top)
+      max(8px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
+  }
+
+  #placement-board,
+  #enemy-board {
+    --cell: clamp(14px, min(calc((100dvh - 150px) / 11), 4vw), 34px);
+  }
+
+  #player-board {
+    --cell: clamp(10px, min(calc((100dvh - 190px) / 11), 2.4vw), 22px);
+  }
+
+  /* A centred flex item cannot be scrolled back into view once it overflows, and
+     the capped card let its footer land on top of the fleet controls. */
+  #screen-setup {
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .setup-card {
+    max-height: none;
+    margin: auto;
+  }
+
+  .screen-header {
+    align-items: center;
+  }
+
+  .board-wrap {
+    gap: 4px;
+  }
 }
 
 /* 11 * 32px cells + 20px of gaps overflows a 360px-wide phone, so shrink the cell
@@ -751,6 +881,6 @@ h2 {
 
   #screen-placement,
   #screen-battle {
-    padding: 1.2vh 4px;
+    padding: 0 max(4px, env(safe-area-inset-left)) calc(1.2vh + env(safe-area-inset-bottom));
   }
 }
