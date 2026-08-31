@@ -160,3 +160,19 @@ browser, plus headless model simulations, and the fix that shipped for it.
 - **Fix:** Open hits are grouped into orthogonally connected clusters and orientation is inferred
   per cluster, with the cluster containing the most recent hit worked first. Over 200 simulated
   games this cut Medium from ~67 shots to ~64; Hard is unchanged at ~46.
+
+## 13. iOS Safari clipped the bottom of every screen and squashed the header buttons
+
+- **Symptom:** On an iPhone the bottom of the battle screen (the newest live-feed entries) and the
+  `Ready` button sat behind Safari's toolbar, the mute button rendered as a cramped sliver next to
+  its neighbours, taps needed a second attempt, and in landscape the last board row fell outside the
+  screen entirely.
+- **Root cause:** The app was `100vh` tall, which iOS resolves against the toolbar-less viewport;
+  button padding was expressed in `vh`/`vw`, so on a phone `.btn` came out ~31px tall and `.btn-icon`
+  37x31px — under the 44px touch target — and the height-derived cell size (`min(6vh, 4vw)`) had no
+  landscape fallback.
+- **Fix:** `#app` uses `100dvh` (with the `100vh` fallback) and the mobile screens pad by
+  `env(safe-area-inset-*)`; coarse pointers get 44px-minimum buttons with square icon buttons and
+  `touch-action: manipulation`; the screen header sticks to the top and `Ready` to the bottom of the
+  scrolling column; a landscape phone query derives the cell size from `100dvh`. Typography lost its
+  unclamped `vh` sizes so short viewports stay readable.

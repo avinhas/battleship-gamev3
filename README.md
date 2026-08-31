@@ -34,6 +34,12 @@ Everything fits inside the viewport — the page never scrolls; only the feed an
 640px the screens stack into a single column (battle order: enemy board, your board, feed) and the
 battle screen scrolls vertically, the one deliberate exception to the no-scroll rule.
 
+On phones the app is sized with `dvh` so iOS Safari's collapsing toolbars can never hide the bottom
+of a screen, padding respects the safe-area insets, the screen header sticks to the top and `Ready`
+sticks to the bottom so their buttons stay reachable while the column scrolls. Buttons are at least
+44px tall on touch pointers, icon buttons are square, and a landscape phone shrinks the cells to the
+available height instead of pushing the last board row off screen.
+
 ### Difficulty
 
 | Level  | Behaviour                                                                |

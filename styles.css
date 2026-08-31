@@ -684,12 +684,16 @@ h2 {
   #screen-placement,
   #screen-battle {
     overflow-y: auto;
-    padding: 1.2vh max(8px, env(safe-area-inset-left)) calc(1.2vh + env(safe-area-inset-bottom));
+    padding: 0 max(8px, env(safe-area-inset-left)) calc(1.2vh + env(safe-area-inset-bottom));
   }
 
   .screen-header {
     flex-wrap: wrap;
     row-gap: 0.6vh;
+  }
+
+  .screen-header h1 {
+    font-size: 22px;
   }
 
   .placement-body {
@@ -753,6 +757,22 @@ h2 {
 
   .btn-primary {
     padding: 1.2vh 18px;
+  }
+
+  /* The stacked layout pushes Ready below the fold; stick it to the bottom of the
+     viewport while the fleet panel is on screen. */
+  #btn-ready {
+    position: sticky;
+    bottom: 0;
+    box-shadow: 0 0 0 6px var(--panel);
+  }
+
+  .screen-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--bg);
+    padding: 1.2vh 0 0.6vh;
   }
 }
 
@@ -822,6 +842,6 @@ h2 {
 
   #screen-placement,
   #screen-battle {
-    padding: 1.2vh max(4px, env(safe-area-inset-left)) calc(1.2vh + env(safe-area-inset-bottom));
+    padding: 0 max(4px, env(safe-area-inset-left)) calc(1.2vh + env(safe-area-inset-bottom));
   }
 }
