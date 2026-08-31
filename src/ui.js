@@ -50,6 +50,7 @@ function openModal(id) {
 
 function closeModal(id) {
   el(id).hidden = true;
+  if (id === 'modal-history' && state.game && state.game.over) openModal('modal-gameover');
 }
 
 function closeAllModals() {
@@ -509,7 +510,11 @@ function bindGlobalControls() {
     }
   });
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeAllModals();
+    if (event.key === 'Escape') {
+      const historyWasOpen = !el('modal-history').hidden;
+      closeAllModals();
+      if (historyWasOpen && state.game && state.game.over) openModal('modal-gameover');
+    }
     if (
       (event.key === 'r' || event.key === 'R') &&
       el('screen-placement').classList.contains('active')
