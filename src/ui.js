@@ -18,6 +18,7 @@ import {
   validateComposition,
 } from './board.js';
 import { createGame, enemyShot, playerShot, scoreboard } from './game.js';
+import * as sound from './sound.js';
 
 const MAX_PER_TYPE = 4;
 
@@ -427,6 +428,15 @@ function setStatus(text) {
   el('battle-status').textContent = text;
 }
 
+function renderMuteButton() {
+  const button = el('btn-mute');
+  const muted = sound.isMuted();
+  button.textContent = muted ? '🔇' : '🔊';
+  button.setAttribute('aria-pressed', String(muted));
+  button.setAttribute('aria-label', muted ? 'Unmute sound' : 'Mute sound');
+  button.title = muted ? 'Unmute sound' : 'Mute sound';
+}
+
 function renderBattle() {
   const { game } = state;
   renderBoard(el('player-board'), game.playerBoard, { showShips: true });
@@ -505,6 +515,7 @@ function finishGame() {
     : 'The enemy sank your entire fleet. Defeat.';
   el('gameover-title').textContent = won ? 'Victory' : 'Defeat';
   setStatus(won ? 'You win!' : 'You lose.');
+  sound.play(won ? 'win' : 'lose');
   renderBattle();
   openModal('modal-gameover');
 }
@@ -516,6 +527,7 @@ function handleEnemyTurn() {
     if (outcome.entry) {
       appendFeed(outcome.entry);
       setStatus(outcome.entry.text);
+      sound.play(outcome.result);
     }
     renderBattle();
     over = state.game.over;
@@ -540,6 +552,7 @@ function handlePlayerShot(row, col) {
   state.busy = true;
   appendFeed(outcome.entry);
   setStatus(outcome.entry.text);
+  sound.play(outcome.result);
   renderBattle();
   if (game.over) {
     finishGame();
@@ -562,6 +575,10 @@ function bindBattleScreen() {
     const cell = event.target.closest('.cell');
     if (!cell) return;
     handlePlayerShot(Number(cell.dataset.row), Number(cell.dataset.col));
+  });
+  el('btn-mute').addEventListener('click', () => {
+    sound.setMuted(!sound.isMuted());
+    renderMuteButton();
   });
   el('btn-history').addEventListener('click', showHistory);
   el('btn-gameover-history').addEventListener('click', () => {
@@ -643,7 +660,11 @@ function bindSetupScreen() {
     renderFleetEditor();
   });
   el('btn-how-to-play').addEventListener('click', () => openModal('modal-how-to-play'));
-  el('btn-start').addEventListener('click', startGame);
+  el('btn-start').addEventListener('click', () => {
+    // The first click of a match doubles as the gesture that arms audio playback.
+    sound.unlock();
+    startGame();
+  });
 }
 
 function bindGlobalControls() {
@@ -673,6 +694,7 @@ function init() {
   bindPlacementScreen();
   bindBattleScreen();
   bindGlobalControls();
+  renderMuteButton();
   renderFleetEditor();
   showScreen('screen-setup');
 }
