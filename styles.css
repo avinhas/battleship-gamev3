@@ -237,15 +237,15 @@ h2 {
 /* ---------- Boards ---------- */
 
 #placement-board {
-  --cell: min(6.2vh, 4.2vw);
+  --cell: clamp(18px, min(6.2vh, 4.2vw), 54px);
 }
 
 #enemy-board {
-  --cell: min(6vh, 4vw);
+  --cell: clamp(18px, min(6vh, 4vw), 52px);
 }
 
 #player-board {
-  --cell: min(3.4vh, 2.3vw);
+  --cell: clamp(12px, min(3.4vh, 2.3vw), 30px);
 }
 
 .board {
@@ -346,6 +346,7 @@ h2 {
 
 .placement-body {
   flex: 1;
+  overflow: hidden;
   display: grid;
   grid-template-columns: minmax(0, auto) minmax(240px, 22vw);
   gap: 1.2vw;
@@ -425,6 +426,7 @@ h2 {
 
 .battle-body {
   flex: 1;
+  overflow: hidden;
   display: grid;
   grid-template-columns: minmax(0, auto) minmax(0, auto) minmax(240px, 20vw);
   gap: 1.2vw;
