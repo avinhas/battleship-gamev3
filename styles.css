@@ -236,6 +236,18 @@ h2 {
 
 /* ---------- Boards ---------- */
 
+#placement-board {
+  --cell: min(6.2vh, 4.2vw);
+}
+
+#enemy-board {
+  --cell: min(6vh, 4vw);
+}
+
+#player-board {
+  --cell: min(3.4vh, 2.3vw);
+}
+
 .board {
   display: grid;
   grid-template-columns: repeat(11, var(--cell));
