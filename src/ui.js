@@ -46,19 +46,86 @@ function showScreen(id) {
   });
 }
 
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+// Element that had focus when each modal was opened, so it can be restored on close.
+const modalOpener = new Map();
+
+function focusableInModal(modal) {
+  const box = modal.querySelector('.modal-box');
+  return Array.from(box.querySelectorAll(FOCUSABLE_SELECTOR));
+}
+
 function openModal(id) {
-  el(id).hidden = false;
+  const modal = el(id);
+  if (!modal.hidden) return;
+  modalOpener.set(id, document.activeElement);
+  modal.hidden = false;
+  const targets = focusableInModal(modal);
+  if (targets.length > 0) {
+    targets[0].focus();
+    return;
+  }
+  const heading = modal.querySelector('.modal-box h2') || modal.querySelector('.modal-box');
+  heading.tabIndex = -1;
+  heading.focus();
+}
+
+function restoreFocus(id) {
+  const opener = modalOpener.get(id);
+  modalOpener.delete(id);
+  if (opener && document.contains(opener) && typeof opener.focus === 'function') opener.focus();
 }
 
 function closeModal(id) {
+  if (el(id).hidden) return;
   el(id).hidden = true;
-  if (id === 'modal-history' && state.game && state.game.over) openModal('modal-gameover');
+  if (id === 'modal-history' && state.game && state.game.over) {
+    modalOpener.delete(id);
+    openModal('modal-gameover');
+    return;
+  }
+  restoreFocus(id);
 }
 
 function closeAllModals() {
   document.querySelectorAll('.modal').forEach((modal) => {
+    if (modal.hidden) return;
     modal.hidden = true;
+    restoreFocus(modal.id);
   });
+}
+
+function openTopModal() {
+  const open = Array.from(document.querySelectorAll('.modal')).filter((modal) => !modal.hidden);
+  return open.length > 0 ? open[open.length - 1] : null;
+}
+
+// Keeps Tab and Shift+Tab cycling inside the dialog while a modal is open.
+function trapTab(event) {
+  const modal = openTopModal();
+  if (!modal) return;
+  const targets = focusableInModal(modal);
+  if (targets.length === 0) {
+    event.preventDefault();
+    return;
+  }
+  const first = targets[0];
+  const last = targets[targets.length - 1];
+  const active = document.activeElement;
+  if (!modal.contains(active)) {
+    event.preventDefault();
+    first.focus();
+    return;
+  }
+  if (event.shiftKey && active === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault();
+    first.focus();
+  }
 }
 
 function renderFleetEditor() {
@@ -545,6 +612,7 @@ function bindGlobalControls() {
     }
   });
   document.addEventListener('keydown', (event) => {
+    if (event.key === 'Tab') trapTab(event);
     if (event.key === 'Escape') {
       const historyWasOpen = !el('modal-history').hidden;
       closeAllModals();
