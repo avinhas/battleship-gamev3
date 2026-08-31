@@ -8,10 +8,90 @@
   </head>
   <body>
     <div id="app">
-      <section id="screen-setup" class="screen active"></section>
+      <!-- Screen 1: Setup -->
+      <section id="screen-setup" class="screen active">
+        <div class="setup-card">
+          <header class="setup-header">
+            <h1>Battleship</h1>
+            <p class="tagline">Pick your difficulty and fleet, then position your ships.</p>
+          </header>
+
+          <div class="setup-columns">
+            <div class="panel">
+              <h2>Difficulty</h2>
+              <div class="difficulty-options" id="difficulty-options">
+                <label class="difficulty-option">
+                  <input type="radio" name="difficulty" value="easy" />
+                  <span><strong>Easy</strong><small>Random shots</small></span>
+                </label>
+                <label class="difficulty-option">
+                  <input type="radio" name="difficulty" value="medium" checked />
+                  <span><strong>Medium</strong><small>Hunt &amp; target</small></span>
+                </label>
+                <label class="difficulty-option">
+                  <input type="radio" name="difficulty" value="hard" />
+                  <span><strong>Hard</strong><small>Parity &amp; probability</small></span>
+                </label>
+              </div>
+              <div class="setup-actions">
+                <button type="button" class="btn" id="btn-how-to-play">How to Play</button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h2>Fleet composition</h2>
+              <div class="fleet-editor" id="fleet-editor"></div>
+              <p class="fleet-summary" id="fleet-summary"></p>
+              <div class="setup-actions">
+                <button type="button" class="btn" id="btn-randomize-fleet">Randomize Fleet</button>
+                <button type="button" class="btn" id="btn-standard-fleet">Standard Fleet</button>
+              </div>
+            </div>
+          </div>
+
+          <footer class="setup-footer">
+            <button type="button" class="btn btn-primary" id="btn-start">Start Game</button>
+          </footer>
+        </div>
+      </section>
+
+      <!-- Screen 2: Manual ship placement -->
       <section id="screen-placement" class="screen"></section>
+
+      <!-- Screen 3: Battle -->
       <section id="screen-battle" class="screen"></section>
     </div>
+
+    <div class="modal" id="modal-how-to-play" hidden>
+      <div class="modal-backdrop" data-close-modal></div>
+      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="how-to-play-title">
+        <header class="modal-header">
+          <h2 id="how-to-play-title">How to Play</h2>
+          <button type="button" class="btn btn-icon" data-close-modal aria-label="Close">✕</button>
+        </header>
+        <div class="modal-body">
+          <ol>
+            <li>Choose a difficulty and a fleet composition, then press <strong>Start Game</strong>.</li>
+            <li>
+              On the placement screen, click a ship in the tray to select it, then click a board
+              cell to drop it — the clicked cell is the ship's top-left anchor. Press
+              <strong>R</strong> or the Rotate button to switch between horizontal and vertical.
+              Click a placed ship to pick it up again.
+            </li>
+            <li>
+              Placements that leave the grid or overlap another ship are refused; the preview turns
+              red. Use <strong>Randomize Placement</strong> to fill the rest of the fleet.
+            </li>
+            <li>
+              In battle, click a cell on the larger enemy board to fire. Hits are red, misses are
+              grey and sunk ships are marked. The enemy fires back after each of your shots.
+            </li>
+            <li>Sink every enemy ship to win. The live feed and Move History record every shot.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="src/ui.js"></script>
   </body>
 </html>
