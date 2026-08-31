@@ -190,9 +190,8 @@ function startGame() {
 
 /* ---------- Board rendering ---------- */
 
-function renderBoard(container, board, { showShips = false, interactive = false } = {}) {
+function buildGrid(container) {
   container.innerHTML = '';
-  container.classList.toggle('interactive', interactive);
 
   const corner = document.createElement('span');
   corner.className = 'label';
@@ -217,18 +216,30 @@ function renderBoard(container, board, { showShips = false, interactive = false 
       cell.dataset.row = String(row);
       cell.dataset.col = String(col);
       cell.setAttribute('aria-label', cellName(row, col));
+      container.appendChild(cell);
+    }
+  }
+}
 
+// The grid is created once; later renders only patch the cells whose state changed, so
+// the DOM does not churn and keyboard focus survives a shot.
+function renderBoard(container, board, { showShips = false, interactive = false } = {}) {
+  const expected = (BOARD_SIZE + 1) * (BOARD_SIZE + 1);
+  if (container.childElementCount !== expected) buildGrid(container);
+  container.classList.toggle('interactive', interactive);
+
+  for (let row = 0; row < BOARD_SIZE; row += 1) {
+    for (let col = 0; col < BOARD_SIZE; col += 1) {
+      const cell = boardCell(container, row, col);
       const ship = shipAt(board, row, col);
       const shot = board.shots[row][col];
-      if (showShips && ship) cell.classList.add('ship');
-      if (shot === 'miss') {
-        cell.classList.add('miss', 'fired');
-        cell.textContent = '•';
-      } else if (shot === 'hit') {
-        cell.classList.add(ship && ship.sunk ? 'sunk' : 'hit', 'fired');
-        cell.textContent = '✕';
-      }
-      container.appendChild(cell);
+      const text = shot === 'miss' ? '•' : shot === 'hit' ? '✕' : '';
+      cell.classList.toggle('ship', Boolean(showShips && ship));
+      cell.classList.toggle('miss', shot === 'miss');
+      cell.classList.toggle('hit', shot === 'hit' && !(ship && ship.sunk));
+      cell.classList.toggle('sunk', shot === 'hit' && Boolean(ship && ship.sunk));
+      cell.classList.toggle('fired', shot !== null);
+      if (cell.textContent !== text) cell.textContent = text;
     }
   }
 }
@@ -274,6 +285,7 @@ function renderPlacement() {
     showShips: true,
     interactive: true,
   });
+  clearPreview();
   renderTray();
   el('orientation-label').textContent =
     state.orientation === 'horizontal' ? 'Horizontal' : 'Vertical';
