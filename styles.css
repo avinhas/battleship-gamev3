@@ -709,6 +709,19 @@ h2 {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /* Stacked panels can exceed a short viewport, so let the setup screen scroll and
+     drop the card's height cap instead of overlapping Start Game onto the last
+     fleet row and pushing the presets off screen. */
+  #screen-setup {
+    overflow-y: auto;
+    align-items: flex-start;
+  }
+
+  .setup-card {
+    max-height: none;
+    margin: auto;
+  }
+
   .placement-body {
     flex: 1;
     grid-template-columns: minmax(0, 1fr);
