@@ -576,3 +576,81 @@ h2 {
   color: var(--muted);
   min-width: 3ch;
 }
+
+/* ---------- Mobile portrait ---------- */
+
+@media (max-width: 640px) {
+  #placement-board,
+  #enemy-board {
+    --cell: 32px;
+  }
+
+  #player-board {
+    --cell: 14px;
+  }
+
+  #screen-placement,
+  #screen-battle {
+    overflow-y: auto;
+    padding: 1.2vh 8px;
+  }
+
+  .screen-header {
+    flex-wrap: wrap;
+    row-gap: 0.6vh;
+  }
+
+  .placement-body {
+    flex: none;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: visible;
+    gap: 1.2vh;
+  }
+
+  .battle-body {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2vh;
+    overflow: visible;
+  }
+
+  /* Source order is player board, enemy board, feed; on mobile the enemy board
+     leads because it is the one the player fires at. */
+  .battle-body .board-wrap:has(#enemy-board) {
+    order: 1;
+  }
+
+  .battle-body .board-wrap:has(#player-board) {
+    order: 2;
+  }
+
+  .battle-body .feed-panel {
+    order: 3;
+  }
+
+  .board-wrap,
+  .placement-body > .panel,
+  .battle-body .feed-panel {
+    width: 100%;
+  }
+
+  .feed-panel {
+    height: auto;
+    max-height: 32vh;
+  }
+
+  .ship-tray {
+    overflow-y: visible;
+  }
+
+  .placement-controls .btn,
+  .setup-actions .btn,
+  .header-actions .btn {
+    padding: 0.9vh 10px;
+  }
+
+  .btn-primary {
+    padding: 1.2vh 18px;
+  }
+}
