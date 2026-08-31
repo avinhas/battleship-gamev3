@@ -439,11 +439,40 @@ function renderBattle() {
   el('score-enemy').textContent = `${score.enemyRemaining}/${score.enemyTotal}`;
 }
 
+const RESULT_ICONS = { miss: '◦', hit: '✕', sunk: '☠' };
+
+function feedSpan(className, text) {
+  const span = document.createElement('span');
+  span.className = className;
+  span.textContent = text;
+  return span;
+}
+
+function feedDetail(entry) {
+  if (entry.result === 'sunk') {
+    const owner = entry.actor === 'player' ? 'the enemy' : 'your';
+    return `sank ${owner} ${entry.shipName}!`;
+  }
+  return entry.result === 'hit' ? 'Hit' : 'Miss';
+}
+
 function appendFeed(entry) {
   const feed = el('live-feed');
   const node = document.createElement('div');
-  node.className = `feed-entry ${entry.actor} result-${entry.result}`;
-  node.textContent = entry.text;
+  node.className = `feed-entry ${entry.actor} result-${entry.result} feed-enter`;
+  node.addEventListener('animationend', () => node.classList.remove('feed-enter'), {
+    once: true,
+  });
+
+  const icon = feedSpan('feed-icon', RESULT_ICONS[entry.result] || '•');
+  icon.setAttribute('aria-hidden', 'true');
+  node.append(
+    feedSpan('feed-actor', entry.actor === 'player' ? 'You' : 'Enemy'),
+    icon,
+    feedSpan('feed-cell', entry.cell),
+    feedSpan('feed-detail', feedDetail(entry)),
+  );
+
   feed.appendChild(node);
   feed.scrollTop = feed.scrollHeight;
 }

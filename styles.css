@@ -452,27 +452,104 @@ h2 {
 }
 
 .feed-entry {
-  padding: 0.4vh 0.6vw;
-  border-left: 3px solid var(--line);
+  --entry-accent: var(--line);
+  display: grid;
+  grid-template-columns: auto auto auto 1fr;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.5vh 0.6vw;
+  border-left: 3px solid var(--entry-accent);
   background: #0f2a44;
   border-radius: 0 6px 6px 0;
 }
 
+.feed-actor {
+  font-size: 0.78em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.1em 0.5em;
+  border-radius: 999px;
+  border: 1px solid var(--entry-accent);
+  color: var(--entry-accent);
+}
+
+.feed-icon {
+  color: var(--entry-accent);
+  font-size: 1.05em;
+  line-height: 1;
+}
+
+.feed-cell {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  background: #0a2036;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.feed-detail {
+  color: var(--muted);
+  min-width: 0;
+}
+
 .feed-entry.player {
-  border-left-color: var(--accent);
+  --entry-accent: var(--accent);
 }
 
 .feed-entry.enemy {
-  border-left-color: var(--warn);
+  --entry-accent: var(--warn);
+  margin-left: 0.8em;
 }
 
 .feed-entry.result-hit {
+  --entry-accent: var(--bad);
+  background: #17334d;
+}
+
+.feed-entry.result-hit .feed-detail {
   color: #ffd0d0;
 }
 
+.feed-entry.result-miss .feed-detail {
+  color: var(--muted);
+}
+
 .feed-entry.result-sunk {
-  color: #ff9d9d;
+  --entry-accent: var(--bad);
+  border: 1px solid var(--bad);
+  border-left-width: 4px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #4a1620, #12304c);
+  box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.25);
+}
+
+.feed-entry.result-sunk .feed-detail {
+  color: #ffd7d7;
   font-weight: 700;
+}
+
+@keyframes feed-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.feed-entry.feed-enter {
+  animation: feed-enter 0.22s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feed-entry.feed-enter {
+    animation: none;
+  }
 }
 
 .scoreboard {
@@ -638,6 +715,15 @@ h2 {
   .feed-panel {
     height: auto;
     max-height: 32vh;
+  }
+
+  .feed-entry {
+    gap: 0.4em;
+    padding: 0.5vh 6px;
+  }
+
+  .feed-entry.enemy {
+    margin-left: 0;
   }
 
   .ship-tray {
