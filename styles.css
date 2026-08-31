@@ -696,6 +696,13 @@ h2 {
     font-size: 22px;
   }
 
+  /* The two-column setup grid leaves the fleet panel too narrow for a ship name,
+     its length, and a 44px stepper, so stack the panels and let each fleet row
+     use the full width. */
+  .setup-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .placement-body {
     flex: none;
     grid-template-columns: minmax(0, 1fr);
@@ -812,6 +819,13 @@ h2 {
   #screen-placement,
   #screen-battle {
     gap: 6px;
+    overflow-y: auto;
+    /* Landscape phones are wider than the 640px portrait breakpoint, so pad by the
+       safe-area insets here too or the notch/home indicator covers the boards. */
+    padding: env(safe-area-inset-top)
+      max(8px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
   }
 
   #placement-board,
