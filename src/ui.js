@@ -31,6 +31,8 @@ const state = {
   game: null,
   busy: false,
   hovered: null,
+  // Cell previewed by the last touch, awaiting a confirming second tap.
+  touchPending: null,
 };
 
 const AI_DELAY_MS = 550;
@@ -200,6 +202,7 @@ function selectShip(shipId) {
 }
 
 function renderPlacement() {
+  state.touchPending = null;
   renderBoard(el('placement-board'), state.playerBoard, {
     showShips: true,
     interactive: true,
@@ -281,6 +284,21 @@ function handlePlacementClick(row, col) {
   const next = remainingShips()[0];
   state.selectedShipId = next ? next.id : ship.id;
   renderPlacement();
+}
+
+// Touch devices have no hover, so the first tap on a cell previews the footprint and a
+// second tap on the same cell commits it.
+function handlePlacementTouch(row, col) {
+  const pending = state.touchPending;
+  if (pending && pending.row === row && pending.col === col) {
+    state.touchPending = null;
+    state.hovered = null;
+    handlePlacementClick(row, col);
+    return;
+  }
+  state.touchPending = { row, col };
+  state.hovered = { row, col };
+  showPreview(row, col);
 }
 
 function rotateSelection() {
@@ -466,6 +484,18 @@ function bindPlacementScreen() {
     state.hovered = null;
     clearPreview();
   });
+
+  board.addEventListener(
+    'touchstart',
+    (event) => {
+      const cell = event.target.closest('.cell');
+      if (!cell) return;
+      // Suppress the synthesised mouse events so a tap never places blind.
+      event.preventDefault();
+      handlePlacementTouch(Number(cell.dataset.row), Number(cell.dataset.col));
+    },
+    { passive: false },
+  );
 
   el('ship-tray').addEventListener('click', (event) => {
     const button = event.target.closest('.tray-ship');
