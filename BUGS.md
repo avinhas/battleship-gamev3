@@ -124,3 +124,39 @@ browser, plus headless model simulations, and the fix that shipped for it.
   AI legality across simulated games at every difficulty (never out of bounds, never a repeat,
   adjacency after a hit, hunt mode restored after a sink, easy never targeting). The test tooling
   is dev-only: the site still deploys as plain static files with no build step.
+
+## 10. Modals were unreachable and inescapable by keyboard
+
+- **Symptom:** Opening `Move History`, `How to Play` or the game-over dialog left focus behind on
+  the battle screen: a keyboard or screen-reader user had to tab through the whole page to reach
+  the dialog, could tab straight out of it into the boards underneath, and after closing landed at
+  the top of the document instead of on the button they had used.
+- **Root cause:** `openModal()`/`closeModal()` only flipped the `hidden` attribute. Nothing moved
+  focus into the dialog, nothing constrained it while open, and the opener was never recorded.
+- **Fix:** `openModal()` stores `document.activeElement`, then focuses the first control in the
+  `.modal-box` (falling back to the heading); a `Tab`/`Shift+Tab` handler cycles focus inside the
+  topmost open dialog; `closeModal()`/`closeAllModals()` restore focus to the opener. This is
+  generic for all three modals, including the history → game-over hand-off.
+
+## 11. Every shot rebuilt both boards from scratch
+
+- **Symptom:** Each shot visibly flickered, and a cell focused with the keyboard lost focus as soon
+  as the AI replied, so grid navigation could not survive a single turn.
+- **Root cause:** `renderBoard()` started with `container.innerHTML = ''` and recreated all 121
+  nodes, and `renderBattle()` called it for both boards after every shot — 242 nodes per turn,
+  discarding the focused element with them.
+- **Fix:** The grid is built once (`buildGrid()`); later renders patch only what changed, toggling
+  `ship`/`miss`/`hit`/`sunk`/`fired` and the cell glyph in place. `data-row`/`data-col`,
+  `aria-label` and the `interactive` toggle are unchanged, and the placement screen clears its
+  preview explicitly now that rendering no longer wipes it.
+
+## 12. The AI mixed hits from two ships when inferring orientation
+
+- **Symptom:** With two unsunk ships hit in the same area, the AI extended along an axis that no
+  single ship occupied and wasted shots. Never illegal — the bounds and already-shot guards held —
+  just slow.
+- **Root cause:** `queueNeighbours()` derived `alignedRow`/`alignedCol` from *all* `activeHits`, so
+  hits from two adjacent ships were treated as one line.
+- **Fix:** Open hits are grouped into orthogonally connected clusters and orientation is inferred
+  per cluster, with the cluster containing the most recent hit worked first. Over 200 simulated
+  games this cut Medium from ~67 shots to ~64; Hard is unchanged at ~46.
