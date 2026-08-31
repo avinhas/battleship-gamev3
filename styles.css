@@ -428,10 +428,11 @@ h2 {
   flex: 1;
   overflow: hidden;
   display: grid;
-  grid-template-columns: minmax(0, auto) minmax(0, auto) minmax(240px, 20vw);
-  gap: 1.2vw;
+  grid-template-columns: max-content max-content minmax(220px, 20vw);
+  gap: 2vw;
   align-items: center;
   justify-content: center;
+  justify-items: center;
   min-height: 0;
 }
 
