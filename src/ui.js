@@ -384,18 +384,23 @@ function finishGame() {
 }
 
 function handleEnemyTurn() {
-  const outcome = enemyShot(state.game);
-  if (outcome.entry) {
-    appendFeed(outcome.entry);
-    setStatus(outcome.entry.text);
+  let over = false;
+  try {
+    const outcome = enemyShot(state.game);
+    if (outcome.entry) {
+      appendFeed(outcome.entry);
+      setStatus(outcome.entry.text);
+    }
+    renderBattle();
+    over = state.game.over;
+    if (over) {
+      finishGame();
+      return;
+    }
+    setStatus('Your turn — fire at the enemy board.');
+  } finally {
+    if (!over) state.busy = false;
   }
-  renderBattle();
-  if (state.game.over) {
-    finishGame();
-    return;
-  }
-  state.busy = false;
-  setStatus('Your turn — fire at the enemy board.');
 }
 
 function handlePlayerShot(row, col) {
