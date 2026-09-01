@@ -216,3 +216,15 @@ browser, plus headless model simulations, and the fix that shipped for it.
   exception to the app's no-scroll rule, consistent with the battle screen already making it.
   Chasing exact viewport units instead leaves controls unreachable on browsers we cannot test,
   and unreachable controls are worse than a scrollbar.
+
+## 16. Game sound was silent on iOS with the mute button unmuted
+
+- **Symptom:** On an iPhone the game made no sound even though the in-app speaker button showed
+  audio enabled, which read as a broken mute toggle.
+- **Root cause:** `src/sound.js` synthesises audio through the Web Audio API, which iOS classifies
+  as ambient playback and routes through the hardware ring/silent switch. With the switch on silent
+  the output is muted by the platform; a web page cannot override that.
+- **Fix:** No code workaround (the available ones — `<audio>` playback tricks or the
+  `playback`/`playsinline` audio session hints — are unreliable across iOS versions). The
+  `How to Play` modal now carries a `.hint` note saying the speaker button controls sound and that
+  the device's silent switch mutes it too, so players know where to look.
