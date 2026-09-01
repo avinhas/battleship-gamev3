@@ -802,6 +802,16 @@ h2 {
     margin: auto;
   }
 
+  /* Start Game sticks to the bottom of the scrolling setup screen for the same reason
+     Ready does on the placement screen. */
+  .setup-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background: var(--bg);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
   .screen-header {
     position: sticky;
     top: 0;

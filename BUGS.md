@@ -210,7 +210,8 @@ browser, plus headless model simulations, and the fix that shipped for it.
   the edges of whatever height the browser actually exposes while the fleet controls scroll in
   between. `#screen-setup` gets the same treatment the landscape query already used
   (`overflow-y: auto`, `align-items: flex-start`, `.setup-card` without `max-height`) so a tall
-  setup card cannot clip the `Battleship` title in portrait either.
+  setup card cannot clip the `Battleship` title in portrait either, with `.setup-footer` sticky at
+  `bottom: 0` so `Start Game` stays on screen instead of falling below the fold.
 - **Tradeoff:** This reintroduces vertical scrolling on the placement screen — a deliberate
   exception to the app's no-scroll rule, consistent with the battle screen already making it.
   Chasing exact viewport units instead leaves controls unreachable on browsers we cannot test,
