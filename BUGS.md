@@ -193,3 +193,26 @@ browser, plus headless model simulations, and the fix that shipped for it.
   `fixed`/`sticky` bar covers whatever happens to sit under it at any scroll offset). In landscape
   `#screen-setup` scrolls, starts its content at the top-left (`margin: auto` still centres it when
   it fits) and `.setup-card` drops its `max-height`.
+
+## 15. iOS Chrome hid the placement screen title and the Ready button
+
+- **Symptom:** On mobile iOS Chrome the placement screen showed neither its `Place Your Fleet`
+  title nor the `Ready` button: both fell outside the visible area with no way to reach them, so
+  the fleet could not be confirmed at all.
+- **Root cause:** `#app` is `100dvh` with `overflow: hidden`, and iOS Chrome's dual top/bottom
+  toolbars leave a visible area shorter than the height `dvh`/`vh` resolves to, so the top and
+  bottom strips of the app box sit behind browser chrome. The mobile block forced
+  `#screen-placement { overflow-y: hidden; }`, overriding the base `overflow-y: auto`, so anything
+  in those strips was clipped and unreachable instead of scrollable.
+- **Fix:** The mobile `overflow-y: hidden` override is gone, so the placement screen scrolls again,
+  and `.placement-footer` is `position: sticky; bottom: 0` with `env(safe-area-inset-bottom)`
+  padding to pair with the already-sticky `.screen-header` at `top: 0`. Title and `Ready` stay at
+  the edges of whatever height the browser actually exposes while the fleet controls scroll in
+  between. `#screen-setup` gets the same treatment the landscape query already used
+  (`overflow-y: auto`, `align-items: flex-start`, `.setup-card` without `max-height`) so a tall
+  setup card cannot clip the `Battleship` title in portrait either, with `.setup-footer` sticky at
+  `bottom: 0` so `Start Game` stays on screen instead of falling below the fold.
+- **Tradeoff:** This reintroduces vertical scrolling on the placement screen — a deliberate
+  exception to the app's no-scroll rule, consistent with the battle screen already making it.
+  Chasing exact viewport units instead leaves controls unreachable on browsers we cannot test,
+  and unreachable controls are worse than a scrollbar.

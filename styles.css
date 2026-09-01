@@ -776,14 +776,40 @@ h2 {
     padding: 1.2vh 18px;
   }
 
-  /* Ready is the screen's footer rather than the tail of the scrolling column, so it
-     stays visible without ever covering the controls above it. */
-  #screen-placement {
-    overflow-y: hidden;
+  /* Ready sticks to the bottom of the scrolling screen: browsers whose toolbars shrink
+     the visible area below the resolved dvh height would otherwise clip it entirely. */
+  .placement-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background: var(--bg);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   #btn-ready {
     width: 100%;
+  }
+
+  /* A card taller than the visible area cannot be scrolled back into view while it is
+     centred inside the clipped #app box. */
+  #screen-setup {
+    overflow-y: auto;
+    align-items: flex-start;
+  }
+
+  .setup-card {
+    max-height: none;
+    margin: auto;
+  }
+
+  /* Start Game sticks to the bottom of the scrolling setup screen for the same reason
+     Ready does on the placement screen. */
+  .setup-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background: var(--bg);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .screen-header {
